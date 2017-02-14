@@ -1,6 +1,7 @@
 (ns status-im.chats-list.screen
   (:require-macros [status-im.utils.views :refer [defview]])
-  (:require [re-frame.core :refer [subscribe dispatch]]
+  (:require [reagent.core :as r]
+            [re-frame.core :refer [subscribe dispatch]]
             [status-im.components.react :refer [list-view
                                                 list-item
                                                 view
@@ -63,20 +64,28 @@
    [linear-gradient {:style  {:height 3}
                      :colors st/gradient-top-bottom-shadow}]])
 
+(defn get-scroll-direction [new-offset old-offset]
+  (if (> new-offset old-offset) :down :up))
+
 (defview chats-list []
   [chats [:get :chats]]
-  [view st/chats-container
-   [toolbar-view]
-   [list-view {:dataSource      (to-datasource chats)
-               :renderRow       (fn [[id :as row] _ _]
-                                  (list-item ^{:key id} [chat-list-item row]))
-               :renderFooter    #(list-item [chat-shadow-item])
-               :renderSeparator #(list-item
+  (let [current-offset (r/atom nil)]
+    [view st/chats-container
+    [toolbar-view]
+    [list-view {:dataSource      (to-datasource chats)
+                :renderRow       (fn [[id :as row] _ _]
+                                   (list-item ^{:key id} [chat-list-item row]))
+                :renderFooter    #(list-item [chat-shadow-item])
+                :renderSeparator #(list-item
                                    (when (< %2 (- (count chats) 1))
                                      ^{:key (str "separator-" %2)}
                                      [view st/chat-separator-wrapper
                                       [view st/chat-separator-item]]))
-               :style           st/list-container}]
-   (when (get-in platform-specific [:chats :action-button?])
-     [chats-action-button])
-   [offline-view]])
+                :onScroll        #(let [new-offset (.. % -nativeEvent -contentOffset -y)
+                                        scroll-direction (get-scroll-direction new-offset @current-offset)]
+                                    (dispatch [:main-tab-scrolled scroll-direction])
+                                    (reset! current-offset new-offset))
+                :style           st/list-container}]
+    (when (get-in platform-specific [:chats :action-button?])
+      [chats-action-button])
+    [offline-view]]))

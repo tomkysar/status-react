@@ -32,3 +32,7 @@
           accounts (subscribe [:get :accounts])]
       (reaction (when (and @accounts @account-id)
                   (get-in @accounts [@account-id :signed-up?]))))))
+
+(register-sub :main-tab-scroll-direction
+              (fn [db]
+                (reaction (:main-tab-scroll-direction @db))))

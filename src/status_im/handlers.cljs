@@ -45,6 +45,10 @@
   (fn [db [_ k v]]
     (assoc-in db [:animations k] v)))
 
+(register-handler :main-tab-scrolled
+                  (fn [db [_ direction]]
+                    (assoc db :main-tab-scroll-direction direction)))
+
 (register-handler :initialize-db
   (fn [{:keys [status-module-initialized? network-status network]} _]
     (data-store/init)

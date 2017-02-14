@@ -96,12 +96,13 @@
     (recur (a/<! scroll-start))))
 
 (defn main-tabs []
-  (let [view-id      (subscribe [:get :view-id])
-        prev-view-id (subscribe [:get :prev-view-id])
-        main-swiper  (r/atom nil)
-        swiped?      (r/atom false)
-        scroll-start (a/chan 10)
-        scroll-ended (a/chan 10)]
+  (let [view-id               (subscribe [:get :view-id])
+        prev-view-id          (subscribe [:get :prev-view-id])
+        view-scroll-direction (subscribe [:main-tab-scroll-direction])
+        main-swiper           (r/atom nil)
+        swiped?               (r/atom false)
+        scroll-start          (a/chan 10)
+        scroll-ended          (a/chan 10)]
     (r/create-class
       {:component-did-mount
        #(start-scrolling-loop scroll-start scroll-ended)
@@ -120,15 +121,16 @@
            [drawer-view
             [view {:style common-st/flex}
              [swiper (merge
-                       st/main-swiper
-                       {:index                  (get-tab-index @view-id)
-                        :loop                   false
-                        :ref                    #(reset! main-swiper %)
-                        :on-momentum-scroll-end (on-scroll-end swiped? scroll-ended @view-id)})
+                      st/main-swiper
+                      {:index                  (get-tab-index @view-id)
+                       :loop                   false
+                       :ref                    #(reset! main-swiper %)
+                       :on-momentum-scroll-end (on-scroll-end swiped? scroll-ended @view-id)})
               [chats-list]
               [discover (= @view-id :discover)]
               [contact-list (= @view-id :contact-list)]]
-             [tabs {:selected-view-id @view-id
-                    :prev-view-id     @prev-view-id
-                    :tab-list         tab-list}]
+             (when-not (= @view-scroll-direction :down)
+               [tabs {:selected-view-id @view-id
+                     :prev-view-id     @prev-view-id
+                     :tab-list         tab-list}])
              [bottom-shadow-view]]]]])})))
