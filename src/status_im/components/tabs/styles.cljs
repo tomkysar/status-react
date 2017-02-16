@@ -62,10 +62,10 @@
    :justifyContent :center
    :alignItems     :center})
 
-(def main-swiper
+(defn main-swiper [tabs-hidden?]
   {:position         :absolute
    :top              0
    :left             0
    :right            0
-   :bottom           tabs-height
+   :bottom           (if tabs-hidden? 0 tab-height)
    :shows-pagination false})

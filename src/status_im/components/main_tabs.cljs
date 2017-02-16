@@ -115,22 +115,23 @@
                (a/put! scroll-start [@main-swiper to])))))
        :reagent-render
        (fn []
-         [view common-st/flex
-          [status-bar {:type :main}]
-          [view common-st/flex
-           [drawer-view
-            [view {:style common-st/flex}
-             [swiper (merge
-                      st/main-swiper
-                      {:index                  (get-tab-index @view-id)
-                       :loop                   false
-                       :ref                    #(reset! main-swiper %)
-                       :on-momentum-scroll-end (on-scroll-end swiped? scroll-ended @view-id)})
-              [chats-list]
-              [discover (= @view-id :discover)]
-              [contact-list (= @view-id :contact-list)]]
-             (when-not (= @view-scroll-direction :down)
-               [tabs {:selected-view-id @view-id
-                     :prev-view-id     @prev-view-id
-                     :tab-list         tab-list}])
-             [bottom-shadow-view]]]]])})))
+         (let [tabs-hidden? (= @view-scroll-direction :down)]
+           [view common-st/flex
+            [status-bar {:type :main}]
+            [view common-st/flex
+             [drawer-view
+              [view {:style common-st/flex}
+               [swiper (merge
+                        (st/main-swiper tabs-hidden?)
+                        {:index                  (get-tab-index @view-id)
+                         :loop                   false
+                         :ref                    #(reset! main-swiper %)
+                         :on-momentum-scroll-end (on-scroll-end swiped? scroll-ended @view-id)})
+                [chats-list]
+                [discover (= @view-id :discover)]
+                [contact-list (= @view-id :contact-list)]]
+               (when-not tabs-hidden?
+                 [tabs {:selected-view-id @view-id
+                        :prev-view-id     @prev-view-id
+                        :tab-list         tab-list}]
+                 [bottom-shadow-view])]]]]))})))
