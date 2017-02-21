@@ -30,7 +30,7 @@
   [chats-scrolled? [:get :chats-scrolled?]]
   (let [new-chat? (get-in platform-specific [:chats :new-chat-in-toolbar?])
         actions   (if new-chat?
-                    [(act/add #(dispatch [:navigate-to :group-contacts :people]))])]
+                    [(act/add #(dispatch [:navigate-to :new-chat :people]))])]
     [toolbar-with-search
      {:show-search?       false
       :search-key         :chat-list
@@ -49,7 +49,7 @@
    [action-button-item
     {:title       (label :t/new-chat)
      :buttonColor :#9b59b6
-     :onPress     #(dispatch [:navigate-to :group-contacts :people])}
+     :onPress     #(dispatch [:navigate-to :new-chat :people])}
     [ion-icon {:name  :md-create
                :style st/create-icon}]]
    [action-button-item
