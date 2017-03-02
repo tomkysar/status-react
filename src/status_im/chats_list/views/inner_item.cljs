@@ -4,6 +4,7 @@
             [clojure.string :as str]
             [status-im.components.react :refer [view image icon text]]
             [status-im.components.chat-icon.screen :refer [chat-icon-view-chat-list]]
+            [status-im.components.context-menu :refer [context-menu]]
             [status-im.models.commands :refer [parse-command-message-content]]
             [status-im.chats-list.styles :as st]
             [status-im.utils.utils :refer [truncate-str]]
@@ -40,12 +41,11 @@
 
 (defn message-content-text [message]
   (let [content (message-content message)]
-    (if (str/blank? content)
-      [text {:style st/last-message-text-no-messages}
-       (label :t/no-messages)]
-      [text {:style           st/last-message-text
-             :number-of-lines 2}
-       content])))
+    [text {:style           st/last-message-text
+           :number-of-lines 1}
+     (if (str/blank? content)
+       (label :t/no-messages)
+       content)]))
 
 (defview message-status [{:keys [chat-id contacts]}
                          {:keys [message-id message-status user-statuses message-type outgoing] :as msg}]
@@ -76,41 +76,52 @@
             :font  :medium}
       unviewed-messages]]))
 
+(defn options-btn [chat-id]
+  (let [options [{:value        #(dispatch [:remove-chat chat-id])
+                  :text         (label :t/delete-chat)
+                  :destructive? true}]]
+    [view st/opts-btn
+     [context-menu
+      [icon :options_gray]
+      options]]))
+
+(defn chat-list-item-name [name group-chat? public?]
+  (let [private-group? (and group-chat? (not public?))
+        public-group?  (and group-chat? public?)
+        chat-name      (if (str/blank? name)
+                         (generate-gfy)
+                         (truncate-str name 30))]
+    [view st/name-view
+     (when public-group?
+       [view st/public-group-icon-container
+        [icon :public_group st/public-group-icon]])
+     (when private-group?
+      [view st/private-group-icon-container
+       [icon :private_group st/private-group-icon]])
+     [text {:style st/name-text}
+      (if public-group?
+        (str "#" chat-name)
+        chat-name)]]))
+
 (defn chat-list-item-inner-view [{:keys [chat-id name color last-message
-                                         online group-chat contacts public?]
-                                  :as chat}]
+                                         online group-chat contacts public?] :as chat}
+                                 edit?]
   (let [last-message (or (first (sort-by :clock-value > (:messages chat)))
                          last-message)
         name         (or (get-contact-translated chat-id :name name)
-                         (generate-gfy))
-        private-group? (and group-chat (not public?))
-        public-group?  (and group-chat public?)]
+                         (generate-gfy))]
     [view st/chat-container
      [view st/chat-icon-container
       [chat-icon-view-chat-list chat-id group-chat name color online]]
-     [view st/item-container
-      [view st/name-view
-       (when public-group?
-         [view st/public-group-icon-container
-          [icon :public_group st/public-group-icon]])
-       (when private-group?
-         [view st/private-group-icon-container
-          [icon :private_group st/private-group-icon]])
-       (let [chat-name (if (str/blank? name)
-                         (generate-gfy)
-                         (truncate-str name 30))]
-         [text {:style st/name-text
-                :font  :medium}
-          (if public-group?
-            (str "#" chat-name)
-            chat-name)])
-       #_(when private-group?
-         [text {:style st/memebers-text}
-          (label-pluralize (inc (count contacts)) :t/members)])]
-      [message-content-text last-message]]
-     [view
-      (when last-message
-        [view st/status-container
-         [message-status chat last-message]
-         [message-timestamp last-message]])
-      [unviewed-indicator chat-id]]]))
+     [view st/chat-info-container
+      [view st/item-upper-container
+       [chat-list-item-name name group-chat public?]
+       (when (and (not edit?) last-message)
+         [view
+          [message-status chat last-message]
+          [message-timestamp last-message]])]
+      [view st/item-lower-container
+       [message-content-text last-message]
+       (when-not edit? [unviewed-indicator chat-id])]]
+     [view st/chat-options-container
+      (when edit? [options-btn chat-id])]]))
