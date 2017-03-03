@@ -40,8 +40,12 @@
   {:margin-top  21
    :margin-left 16})
 
+(def add-button-container
+  {:margin-left 16})
+
 (def group-chat-name-input
   {:font-size      17
+   :padding-bottom 0
    :letter-spacing -0.2
    :color          text1-color})
 
@@ -56,9 +60,6 @@
           :height   16
           :position :absolute}
          (get-in platform-specific [:public-group-chat-hash-style])))
-
-(def group-chat-focus-line-color
-  (get-in platform-specific [:group-chat-focus-line-color]))
 
 (def group-chat-focus-line-height
   (get-in platform-specific [:group-chat-focus-line-height]))
@@ -94,9 +95,11 @@
    :margin-top     12})
 
 (def add-icon-container
-  {:width           40
-   :align-items     :center
-   :justify-content :center})
+  (merge (ps-new-group :add-icon-container)
+         {:width            40
+          :height           40
+          :align-items      :center
+          :justify-content  :center}))
 
 (def add-icon
   {:align-items :center
@@ -107,13 +110,17 @@
   (merge (ps-new-group :add-text)
          {:color color-light-blue}))
 
+(def delete-group-text-container
+  {:padding-left 16})
+
 (def delete-group-text
   (merge (ps-new-group :delete-group-text)
          {:color color-light-red}))
 
 (def delete-group-prompt-text
   (merge (ps-new-group :delete-group-prompt-text)
-         {:color          color-gray4}))
+         {:color          color-gray4
+          :padding-top    5}))
 
 (def contact-container
   (merge (ps-new-group :contact-container)
@@ -140,9 +147,14 @@
    :height 12})
 
 (def delete-group-container
-  (merge (ps-new-group :delete-group-container)
-         {:height       64
-          :padding-top  12}))
+  (ps-new-group :delete-group-container))
+
+(def delete-icon-container
+  (merge (ps-new-group :delete-icon-container)
+         {:width            40
+          :height           40
+          :align-items      :center
+          :justify-content  :center}))
 
 (def order-item-container
   {:background-color color-white})
@@ -185,6 +197,11 @@
 
 (def toolbar-title-with-count-container
   {:padding-left 6})
+
+(def separator
+  {:background-color color-gray5
+   :height           1
+   :opacity          0.5})
 
 
 

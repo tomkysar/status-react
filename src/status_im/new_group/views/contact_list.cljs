@@ -25,12 +25,16 @@
              :font  :toolbar-title}
        count-value]])])
 
-(defn contact-list-toolbar [contacts-count show-search? search-text]
+(defn contact-list-toolbar [contacts-count show-search? search-text group-type]
   (toolbar-with-search
     {:show-search?       (= show-search? :contact-group-list)
      :search-text        search-text
      :search-key         :contact-group-list
-     :custom-title       (title-with-count (label :t/new-group) contacts-count)
+     :custom-title       (title-with-count
+                           (label (if (= group-type :contact-group)
+                                    :t/new-group
+                                    :t/new-group-chat))
+                           contacts-count)
      :search-placeholder (label :t/search-contacts)}))
 
 (defn render-separator [_ row-id _]
@@ -38,14 +42,15 @@
              [view cst/contact-item-separator-wrapper
               [view cst/contact-item-separator]]))
 
-(defview contact-group-list []
+(defview contact-toggle-list []
   [contacts [:all-added-group-contacts-filtered]
    selected-contacts-count [:selected-contacts-count]
    show-search [:get-in [:toolbar-search :show]]
-   search-text [:get-in [:toolbar-search :text]]]
+   search-text [:get-in [:toolbar-search :text]]
+   group-type [:get :group-type]]
   [view st/new-group-container
    [status-bar]
-   [contact-list-toolbar selected-contacts-count show-search search-text]
+   [contact-list-toolbar selected-contacts-count show-search search-text group-type]
    [view {:flex 1}
     [list-view
      {:dataSource                (to-datasource contacts)
@@ -55,4 +60,4 @@
       :style                     cst/contacts-list
       :keyboardShouldPersistTaps true}]]
    (when (pos? selected-contacts-count)
-     [confirm-button (label :t/next) #(dispatch [:navigation-replace :contact-group])])])
+     [confirm-button (label :t/next) #(dispatch [:navigation-replace :group])])])

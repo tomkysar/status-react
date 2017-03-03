@@ -33,7 +33,7 @@
 (def toolbar-options
   [{:text (label :t/new-contact)    :value #(dispatch [:navigate-to :new-contact])}
    {:text (label :t/edit)           :value #(dispatch [:set-in [:contacts-ui-props :edit?] true])}
-   {:text (label :t/new-group)      :value #(dispatch [:open-contact-group-list])}
+   {:text (label :t/new-group)      :value #(dispatch [:open-contact-toggle-list :contact-group])}
    {:text (label :t/reorder-groups) :value #(dispatch [:navigate-to :reorder-groups])}])
 
 (defn toolbar-actions []
@@ -52,7 +52,8 @@
             :title          (label :t/edit-contacts)}])
 
 (defn options-btn [group]
-  (let [options [{:value #(dispatch [:navigate-to :contact-group group]) :text (label :t/edit-group)}]]
+  (let [options [{:value #(dispatch [:navigate-to :group group :contact-group])
+                  :text (label :t/edit-group)}]]
     [view st/more-btn
      [context-menu
       [icon :options_gray]

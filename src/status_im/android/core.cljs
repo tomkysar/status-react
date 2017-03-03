@@ -25,8 +25,8 @@
             [status-im.transactions.screen :refer [confirm]]
             [status-im.chats-list.screen :refer [chats-list]]
             [status-im.new-group.screen-public :refer [new-public-group]]
-            [status-im.new-group.screen-private :refer [new-group contact-group]]
-            [status-im.new-group.views.contact-list :refer [contact-group-list]]
+            [status-im.new-group.screen-private :refer [group]]
+            [status-im.new-group.views.contact-list :refer [contact-toggle-list]]
             [status-im.new-group.views.reorder-groups :refer [reorder-groups]]
             [status-im.participants.views.add :refer [new-participants]]
             [status-im.participants.views.remove :refer [remove-participants]]
@@ -107,12 +107,11 @@
                                :add-participants new-participants
                                :remove-participants remove-participants
                                :chat-list main-tabs
-                               :new-group new-group
+                               :group group
                                :new-public-group new-public-group
-                               :contact-group contact-group
-                               :contact-group-list contact-group-list
                                :group-settings group-settings
                                :contact-list main-tabs
+                               :contact-toggle-list contact-toggle-list
                                :contact-list-search-results contacts-search-results
                                :group-contacts contact-list
                                :reorder-groups reorder-groups

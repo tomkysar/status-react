@@ -24,23 +24,18 @@
               :show (when show-search? :contact-list)
               :text "")))
 
-(defmethod nav/preload-data! :contact-group
-  [db [_ _ group]]
+(defmethod nav/preload-data! :group
+  [db [_ _ group group-type]]
   (if group
     (-> db
         (assoc :contact-group group
+               :group-type group-type
                :selected-contacts (into #{} (map :identity (:contacts group)))
                :new-chat-name (:name group))
         (update :toolbar-search assoc
                 :show :contact-list
                 :text ""))
     db))
-
-(defmethod nav/preload-data! :new-group
-  [db _]
-  (-> db
-      (assoc :new-group #{})
-      (assoc :new-chat-name nil)))
 
 (defmethod nav/preload-data! :contact-list
   [db [_ _ click-handler]]
@@ -369,11 +364,12 @@
                           :cancel-text (label :t/cancel)}))))
 
 (register-handler
-  :open-contact-group-list
-  (after #(dispatch [:navigate-to :contact-group-list]))
-  (fn [db _]
+  :open-contact-toggle-list
+  (after #(dispatch [:navigate-to :contact-toggle-list]))
+  (fn [db [_ type]]
     (->
       (assoc db :contact-group nil
+                :group-type type
                 :selected-contacts #{}
                 :new-chat-name "")
       (assoc-in [:toolbar-search :show] nil)
