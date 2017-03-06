@@ -32,6 +32,7 @@
             [status-im.profile.photo-capture.screen :refer [profile-photo-capture]]
             status-im.data-store.core
             [taoensso.timbre :as log]
+            [status-im.utils.dev :as dev]
             [status-im.components.status :as status]
             [status-im.chat.styles.screen :as st]
             [status-im.accounts.views.qr-code :refer [qr-code-view]]))
@@ -135,6 +136,7 @@
                       [component])]])]))))})))
 
 (defn init []
+  (dev/dev-setup)
   (status/call-module status/init-jail)
   (dispatch-sync [:reset-app])
   (.registerComponent app-registry "StatusIm" #(r/reactify-component app-root))
