@@ -22,7 +22,7 @@
    :height  18
    :opacity (if enabled? 1 0.3)})
 
-(def new-group-container
+(def group-container
   {:flex             1
    :flex-direction   :column
    :background-color color-white})

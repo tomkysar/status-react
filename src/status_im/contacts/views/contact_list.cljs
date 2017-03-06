@@ -53,7 +53,9 @@
                      :extend-options (when group
                                        [{:value #(dispatch [:hide-contact row])
                                          :text (label :t/delete-contact)}
-                                        {:value #(dispatch [:remove-contact-from-group row group])
+                                        {:value #(dispatch [:remove-contact-from-group
+                                                            (:whisper-identity row)
+                                                            (:group-id group)])
                                          :text (label :t/remove-from-group)}])
                      :on-click       (when (and (not edit?) click-handler)
                                        #(click-handler row action params))}])))

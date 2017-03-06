@@ -24,17 +24,12 @@
               :show (when show-search? :contact-list)
               :text "")))
 
-(defmethod nav/preload-data! :group
+(defmethod nav/preload-data! :edit-group
   [db [_ _ group group-type]]
   (if group
-    (-> db
-        (assoc :contact-group group
-               :group-type group-type
-               :selected-contacts (into #{} (map :identity (:contacts group)))
-               :new-chat-name (:name group))
-        (update :toolbar-search assoc
-                :show :contact-list
-                :text ""))
+    (assoc db :contact-group-id (:group-id group)
+              :group-type group-type
+              :new-chat-name (:name group))
     db))
 
 (defmethod nav/preload-data! :contact-list
@@ -337,7 +332,7 @@
 
 (register-handler :remove-contact-from-group
   (u/side-effect!
-    (fn [{:keys [contact-groups]} [_ {:keys [whisper-identity]} {:keys [group-id]}]]
+    (fn [{:keys [contact-groups]} [_ whisper-identity group-id]]
       (let [group' (update (contact-groups group-id) :contacts (remove-contact-from-group whisper-identity))]
         (dispatch [:update-group group'])))))
 
@@ -366,10 +361,10 @@
 (register-handler
   :open-contact-toggle-list
   (after #(dispatch [:navigate-to :contact-toggle-list]))
-  (fn [db [_ type]]
+  (fn [db [_ group-type]]
     (->
       (assoc db :contact-group nil
-                :group-type type
+                :group-type group-type
                 :selected-contacts #{}
                 :new-chat-name "")
       (assoc-in [:toolbar-search :show] nil)

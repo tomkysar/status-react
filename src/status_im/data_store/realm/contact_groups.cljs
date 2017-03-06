@@ -16,6 +16,14 @@
   [group update?]
   (realm/save @realm/account-realm :contact-group group update?))
 
+(defn save-property
+  [group-id property-name value]
+  (realm/write @realm/account-realm
+               (fn []
+                 (-> @realm/account-realm
+                     (realm/get-one-by-field :contact-group :group-id group-id)
+                     (aset (name property-name) value)))))
+
 (defn exists?
   [group-id]
   (realm/exists? @realm/account-realm :contact-group {:group-id group-id}))

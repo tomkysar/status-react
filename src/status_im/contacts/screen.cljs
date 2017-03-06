@@ -52,7 +52,7 @@
             :title          (label :t/edit-contacts)}])
 
 (defn options-btn [group]
-  (let [options [{:value #(dispatch [:navigate-to :group group :contact-group])
+  (let [options [{:value #(dispatch [:navigate-to :edit-group group :contact-group])
                   :text (label :t/edit-group)}]]
     [view st/more-btn
      [context-menu
@@ -102,7 +102,9 @@
                                    [{:value #(dispatch [:hide-contact contact])
                                      :text (label :t/delete-contact)
                                      :style st/delete-contact-text}
-                                    {:value #(dispatch [:remove-contact-from-group contact group])
+                                    {:value #(dispatch [:remove-contact-from-group
+                                                        (:whisper-identity contact)
+                                                        (:group-id group)])
                                      :text (label :t/remove-from-group)}])}]
                 (when-not (= contact (last contacts))
                   [view st/contact-item-separator-wrapper

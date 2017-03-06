@@ -13,6 +13,13 @@
             [taoensso.timbre :as log]
             [status-im.navigation.handlers :as nav]))
 
+(defmethod nav/preload-data! :add-contacts-toggle-list
+  [db _]
+  (->
+    (assoc db :selected-contacts #{})
+    (assoc-in [:toolbar-search :show] nil)
+    (assoc-in [:toolbar-search :text] "")))
+
 (defn deselect-contact
   [db [_ id]]
   (update db :selected-contacts disj id))
@@ -199,20 +206,6 @@
       ((after create-group!))
       ((after show-contact-list!))))
 
-(defn prepare-group-after-edit
-  [{:keys [selected-contacts] :as db} [_ group group-name]]
-  (let [contacts (mapv #(hash-map :identity %) selected-contacts)
-        group'   (assoc group :name        group-name
-                              :contacts    contacts)]
-    (assoc db :new-group group')))
-
-(register-handler
-  :update-group-after-edit
-  (-> prepare-group-after-edit
-      ((enrich update-group))
-      ((after update-group!))
-      ((after show-contact-list!))))
-
 (register-handler
   :update-group
   (-> (fn [db [_ new-group]]
@@ -289,3 +282,37 @@
                               (map-indexed vector (reverse groups-order)))]
         (dispatch [:update-groups new-groups])
         (dispatch [:navigate-to-clean :contact-list])))))
+
+(defn save-property!
+  [contact-group-id property-name value]
+  (groups/save-property contact-group-id property-name value))
+
+(defn save-group-property!
+  [db-name property-name]
+  (fn [{:keys [contact-group-id] :as db} _]
+    (let [property (db-name db)]
+      (save-property! contact-group-id property-name property))))
+
+(defn update-group-property
+  [db-name property-name]
+  (fn [{:keys [contact-group-id] :as db} _]
+    (let [property (db-name db)]
+      (assoc-in db [:contact-groups contact-group-id property-name] property))))
+
+(register-handler :set-group-name
+  (after (save-group-property! :new-chat-name :name))
+  (update-group-property :new-chat-name :name))
+
+(defn prepare-group-add-contacts
+  [{:keys [selected-contacts contact-groups contact-group-id] :as db} _]
+  (let [group (contact-groups contact-group-id)
+        contacts (into [] (concat (:contacts group) (mapv #(hash-map :identity %) selected-contacts)))]
+    (assoc db :new-group (assoc group :contacts contacts))))
+
+(register-handler
+  :add-selected-contacts-to-group
+  (-> prepare-group-add-contacts
+      ((enrich update-group))
+      ((after update-group!))))
+
+

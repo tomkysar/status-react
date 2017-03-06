@@ -20,120 +20,93 @@
             [status-im.utils.listview :refer [to-datasource]]
             [status-im.new-group.views.contact :refer [new-group-contact]]
             [status-im.new-group.styles :as st]
+            [status-im.new-group.views.group :refer [group-toolbar
+                                                     group-name-view
+                                                     add-btn
+                                                     more-btn
+                                                     delete-btn
+                                                     separator]]
             [status-im.new-group.validations :as v]
             [status-im.i18n :refer [label]]
             [cljs.spec :as s]))
 
 (def contacts-limit 3)
 
-(defview group-name-input []
-  [new-group-name [:get :new-chat-name]]
+(defview group-contacts-view [group]
+  [contacts [:all-added-group-contacts-with-limit (:group-id group) contacts-limit]
+   contacts-count [:all-added-group-contacts-count (:group-id group)]]
   [view
-   [text-field
-    {:error            (when
-                         (not (s/valid? ::v/not-illegal-name new-group-name))
-                         (label :t/illegal-group-chat-name))
-     :error-color       color-blue
-     :wrapper-style     st/group-chat-name-wrapper
-     :line-color        color-gray5
-     :focus-line-color  color-light-blue
-     :focus-line-height st/group-chat-focus-line-height
-     :label-hidden?     true
-     :input-style       st/group-chat-name-input
-     :auto-focus        true
-     :on-change-text    #(dispatch [:set :new-chat-name %])
-     :value             new-group-name}]])
+   (when (pos? contacts-count)
+     [separator])
+   [view
+    (doall
+      (map (fn [row]
+             ^{:key row}
+             [view
+              [contact-view
+               {:contact        row
+                :on-click       nil
+                :extend-options [{:value #(dispatch [:remove-contact-from-group
+                                                     (:whisper-identity row)
+                                                     (:group-id group)])
+                                  :text (label :t/remove-from-group)}]
+                :extended?      true}]
+              (when-not (= row (last contacts))
+                [separator])])
+           contacts))]
+   (when (< contacts-limit contacts-count)
+     [more-btn group contacts-limit contacts-count])])
 
-(defview group-toolbar [type edit?]
-  [view
-   [status-bar]
-   [toolbar
-    {:title (label
-              (if (= type :contact-group)
-                (if edit? :t/edit-group :t/new-group)
-                (if edit? :t/edit-group :t/new-group-chat)))
-     :actions [{:image :blank}]}]])
+(defn save []
+  (dispatch [:set-group-name]))
 
-(defn group-name-view []
-  [view st/chat-name-container
-   [text {:style st/group-name-text}
-    (label :t/name)]
-   [group-name-input]])
-
-(defn add-btn []
-  [view st/add-button-container
-   [touchable-highlight {:on-press #(dispatch [:navigate-forget :contact-toggle-list])}
-    [view st/add-container
-     [view st/add-icon-container
-      [icon :add_blue st/add-icon]]
-     [text {:style st/add-text}
-      (label :t/add-members)]]]])
-
-(defn delete-btn [on-press]
-  [touchable-highlight {:on-press on-press}
-   [view st/delete-group-container
-    [view st/delete-icon-container
-     [icon :close_red st/add-icon]]
-    [view st/delete-group-text-container
-     [text {:style st/delete-group-text}
-      (label :t/delete-group)]
-     [text {:style st/delete-group-prompt-text}
-      (label :t/delete-group-prompt)]]]])
-
-(defn more-btn [contacts-limit contacts-count]
-  [view
-   [view cst/contact-item-separator-wrapper
-    [view cst/contact-item-separator]]
-   [view cst/show-all
-    [touchable-highlight {:on-press #(dispatch [:navigate-forget :contact-toggle-list])}
-     [view
-      [text {:style cst/show-all-text
-             :uppercase? (get-in platform-specific [:uppercase?])
-             :font (get-in platform-specific [:component-styles :contacts :show-all-text-font])}
-       (str (- contacts-count contacts-limit) " " (label :t/more))]]]]])
-
-(defview group []
-  [contacts [:selected-group-contacts]
-   group-name [:get :new-chat-name]
-   group [:get :contact-group]
+(defview edit-group []
+  [group-name [:get :new-chat-name]
+   group [:get-contact-group]
    type [:get :group-type]]
-  (let [save-btn-enabled? (and (s/valid? ::v/name group-name) (pos? (count contacts)))
-        contacts-count (count contacts)
-        limited-contacts (take contacts-limit contacts)]
-    [view st/new-group-container
+  (let [save-btn-enabled? (and (s/valid? ::v/name group-name)
+                               (not= group-name (:name group)))]
+    [view st/group-container
      [group-toolbar type (boolean group)]
      [group-name-view]
      [add-btn]
-     (when (pos? contacts-count)
-       [view cst/contact-item-separator-wrapper
-        [view cst/contact-item-separator]])
-     [view
-      (doall
-        (map (fn [row]
-               ^{:key row}
-               [view
-                [contact-view
-                 {:contact        row
-                  :on-click       nil
-                  :extend-options [{:value #(dispatch [:deselect-contact (:whisper-identity row)])
-                                    :text (label :t/remove-from-group)}]
-                  :extended?      true}]
-                (when-not (= row (last limited-contacts))
-                  [view cst/contact-item-separator-wrapper
-                   [view cst/contact-item-separator]])])
-             limited-contacts))]
-     (when (< contacts-limit contacts-count)
-       [more-btn contacts-limit contacts-count])
+     [group-contacts-view group]
      [view st/separator]
-     (when group
-        [delete-btn #(do
-                       (dispatch [:update-group (assoc group :pending? true)])
-                       (dispatch [:navigate-to-clean :contact-list]))])
+     [delete-btn #(do
+                    (dispatch [:update-group (assoc group :pending? true)])
+                    (dispatch [:navigate-to-clean :contact-list]))]
      [view {:flex 1}]
      (when save-btn-enabled?
+       [confirm-button (label :t/save) save])]))
+
+(defn render-separator [_ row-id _]
+  (list-item ^{:key row-id}
+             [separator]))
+
+(defn render-row [row _ _]
+  (list-item
+    ^{:key row}
+    [contact-view {:contact   row
+                   :extended? false
+                   :on-click  nil}]))
+
+(defview new-group []
+  [contacts [:selected-group-contacts]
+   group-name [:get :new-chat-name]
+   group-type [:get :group-type]]
+  (let [save-btn-enabled? (and (s/valid? ::v/name group-name) (pos? (count contacts)))]
+    [view st/group-container
+     [group-toolbar group-type false]
+     [group-name-view]
+     [view {:flex 1}
+      [list-view {:dataSource                (to-datasource contacts)
+                  :enableEmptySections       true
+                  :renderRow                 render-row
+                  :bounces                   false
+                  :keyboardShouldPersistTaps true
+                  :renderSeparator           render-separator}]]
+     (when save-btn-enabled?
        [confirm-button (label :t/save)
-        (if (= type :contact-group)
-          (if group
-            #(dispatch [:update-group-after-edit group group-name])
-            #(dispatch [:create-new-group group-name]))
+        (if (= group-type :contact-group)
+          #(dispatch [:create-new-group group-name])
           #(dispatch [:create-new-group-chat group-name]))])]))

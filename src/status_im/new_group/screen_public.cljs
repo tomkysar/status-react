@@ -56,7 +56,7 @@
    [text {:style st/topic-hash} "#"]])
 
 (defn new-public-group []
-  [view st/new-group-container
+  [view st/group-container
    [new-group-toolbar]
    [view st/chat-name-container
     [text {:style st/members-text
